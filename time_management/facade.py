@@ -69,12 +69,17 @@ class DatabaseFacade:
         )
         self.connection.commit()
 
+    def get_raw_values(self):
+        cur = self.connection.cursor()
+        cur.execute("SELECT * FROM time_management")#{}".format(self.table_name))
+        return cur.fetchall()
+
     def get_all_items(self):
         rows = []
-        for row in self.cursor.execute("SELECT * FROM {}".format(self.table_name)):
-            item = self.__format_row(row)
-            rows.append(item)
+        for row in self.get_raw_values():
+            rows.append(row)
         return rows
+
 
     def get_all_ids(self):
         ids = []
@@ -84,35 +89,21 @@ class DatabaseFacade:
 
     def get_overdue_items(self):
         rows = []
-        for row in self.cursor.execute("SELECT * FROM {}".format(self.table_name)):
+        for row in self.get_raw_values():
             if row[3] != "NA" and row[4] == "false":
                 if kronos.is_overdue(row[1], row[3]):
-                    item = self.__format_row(row)
-                    rows.append(item)
+                    rows.append(row)
         return rows
 
     def get_last_days_items(self):
         rows = []
-        for row in self.cursor.execute("SELECT * FROM {}".format(self.table_name)):
+        for row in self.get_raw_values():
             if kronos.get_day_of_week(kronos.get_date_time()) == "Monday":
                 if kronos.is_previous_friday(row[1]):
-                    item = self.__format_row(row)
-                    rows.append(item)
+                    rows.append(row)
             if kronos.is_yesterday(row[1]):
-                item = self.__format_row(row)
-                rows.append(item)
+                rows.append(row)
         return rows
-
-    def __format_row(self, row):
-        item_no = row[0]
-        date = row[1]
-        note = row[2]
-        days_to_complete = row[3]
-        is_complete = row[4]
-        record_type = "Task"
-        if days_to_complete == "NA":
-            record_type = "Note"
-        return f"Item No: {item_no}, Date: {date}, {record_type}: {note}, Days to complete: {days_to_complete}, Completed: {is_complete}"
 
     def delete_history(self):
         self.cursor.execute("DROP TABLE {}".format(self.table_name))

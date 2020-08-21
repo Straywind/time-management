@@ -1,6 +1,8 @@
 from os import system, name
+from interface_display import InterfaceDisplay
 
 menu_cache = []
+display = InterfaceDisplay()
 
 
 def parse_ascii_banner(file):
